@@ -1743,6 +1743,47 @@ array_free(PyObject * v)
     PyObject_Free(v);
 }
 
+static PyNumberMethods array_as_number = {
+    .nb_add = (binaryfunc)array_add,
+    .nb_subtract = (binaryfunc)array_subtract,
+    .nb_multiply = (binaryfunc)array_multiply,
+    .nb_remainder = (binaryfunc)array_remainder,
+    .nb_divmod = (binaryfunc)array_divmod,
+    .nb_power = (ternaryfunc)array_power,
+    .nb_negative = (unaryfunc)array_negative,
+    .nb_positive = (unaryfunc)array_positive,
+    .nb_absolute = (unaryfunc)array_absolute,
+    .nb_bool = (inquiry)_array_nonzero,
+    .nb_invert = (unaryfunc)array_invert,
+    .nb_lshift = (binaryfunc)array_left_shift,
+    .nb_rshift = (binaryfunc)array_right_shift,
+    .nb_and = (binaryfunc)array_bitwise_and,
+    .nb_xor = (binaryfunc)array_bitwise_xor,
+    .nb_or = (binaryfunc)array_bitwise_or,
+
+    .nb_int = (unaryfunc)array_int,
+    .nb_float = (unaryfunc)array_float,
+    .nb_index = (unaryfunc)array_index,
+
+    .nb_inplace_add = (binaryfunc)array_inplace_add,
+    .nb_inplace_subtract = (binaryfunc)array_inplace_subtract,
+    .nb_inplace_multiply = (binaryfunc)array_inplace_multiply,
+    .nb_inplace_remainder = (binaryfunc)array_inplace_remainder,
+    .nb_inplace_power = (ternaryfunc)array_inplace_power,
+    .nb_inplace_lshift = (binaryfunc)array_inplace_left_shift,
+    .nb_inplace_rshift = (binaryfunc)array_inplace_right_shift,
+    .nb_inplace_and = (binaryfunc)array_inplace_bitwise_and,
+    .nb_inplace_xor = (binaryfunc)array_inplace_bitwise_xor,
+    .nb_inplace_or = (binaryfunc)array_inplace_bitwise_or,
+
+    .nb_floor_divide = (binaryfunc)array_floor_divide,
+    .nb_true_divide = (binaryfunc)array_true_divide,
+    .nb_inplace_floor_divide = (binaryfunc)array_inplace_floor_divide,
+    .nb_inplace_true_divide = (binaryfunc)array_inplace_true_divide,
+
+    .nb_matrix_multiply = (binaryfunc)array_matrix_multiply,
+    .nb_inplace_matrix_multiply = (binaryfunc)array_inplace_matrix_multiply,
+};
 
 NPY_NO_EXPORT PyTypeObject PyArray_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
