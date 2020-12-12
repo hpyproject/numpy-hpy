@@ -1782,7 +1782,7 @@ array_assign_item(PyArrayObject *self, Py_ssize_t i, PyObject *op)
 /*
  * General assignment with python indexing objects.
  */
-static int
+NPY_NO_EXPORT int
 array_assign_subscript(PyArrayObject *self, PyObject *ind, PyObject *op)
 {
     int index_type;
@@ -2071,12 +2071,6 @@ array_assign_subscript(PyArrayObject *self, PyObject *ind, PyObject *op)
     return 0;
 }
 
-
-NPY_NO_EXPORT PyMappingMethods array_as_mapping = {
-    (lenfunc)array_length,              /*mp_length*/
-    (binaryfunc)array_subscript,        /*mp_subscript*/
-    (objobjargproc)array_assign_subscript,       /*mp_ass_subscript*/
-};
 
 /****************** End of Mapping Protocol ******************************/
 

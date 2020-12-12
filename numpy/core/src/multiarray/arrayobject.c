@@ -1743,6 +1743,12 @@ array_free(PyObject * v)
     PyObject_Free(v);
 }
 
+static PyMappingMethods array_as_mapping = {
+    .mp_length = (lenfunc)array_length,
+    .mp_subscript = (binaryfunc)array_subscript,
+    .mp_ass_subscript = (objobjargproc)array_assign_subscript,
+};
+
 static PyNumberMethods array_as_number = {
     .nb_add = (binaryfunc)array_add,
     .nb_subtract = (binaryfunc)array_subtract,

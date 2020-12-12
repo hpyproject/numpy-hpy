@@ -1,9 +1,6 @@
 #ifndef _NPY_ARRAYMAPPING_H_
 #define _NPY_ARRAYMAPPING_H_
 
-extern NPY_NO_EXPORT PyMappingMethods array_as_mapping;
-
-
 /*
  * Struct into which indices are parsed.
  * I.e. integer ones should only be parsed once, slices and arrays
@@ -46,6 +43,9 @@ array_subscript(PyArrayObject *self, PyObject *op);
 
 NPY_NO_EXPORT int
 array_assign_item(PyArrayObject *self, Py_ssize_t i, PyObject *v);
+
+NPY_NO_EXPORT int
+array_assign_subscript(PyArrayObject *self, PyObject *ind, PyObject *op);
 
 /*
  * Prototypes for Mapping calls --- not part of the C-API
