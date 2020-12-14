@@ -26,4 +26,8 @@ array_might_be_written(PyArrayObject *obj);
  */
 static const int NPY_ARRAY_WARN_ON_WRITE = (1 << 31);
 
+extern NPY_NO_EXPORT PyType_Spec PyArray_Type_spec;
+extern NPY_NO_EXPORT PyTypeObject* _PyArray_Type_p;
+#define PyArray_Type (*_PyArray_Type_p)
+
 #endif
