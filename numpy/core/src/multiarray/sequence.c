@@ -25,7 +25,7 @@
    we fill it in here so that PySequence_XXXX calls work as expected
 */
 
-static int
+NPY_NO_EXPORT int
 array_contains(PyArrayObject *self, PyObject *el)
 {
     /* equivalent to (self == el).any() */
@@ -50,7 +50,7 @@ array_contains(PyArrayObject *self, PyObject *el)
     return ret;
 }
 
-static PyObject *
+NPY_NO_EXPORT PyObject *
 array_concat(PyObject *self, PyObject *other)
 {
     /*
@@ -64,19 +64,6 @@ array_concat(PyObject *self, PyObject *other)
     return NULL;
 }
 
-
-NPY_NO_EXPORT PySequenceMethods array_as_sequence = {
-    (lenfunc)array_length,                  /*sq_length*/
-    (binaryfunc)array_concat,               /*sq_concat for operator.concat*/
-    (ssizeargfunc)NULL,
-    (ssizeargfunc)array_item,
-    (ssizessizeargfunc)NULL,
-    (ssizeobjargproc)array_assign_item,     /*sq_ass_item*/
-    (ssizessizeobjargproc)NULL,             /*sq_ass_slice*/
-    (objobjproc) array_contains,            /*sq_contains */
-    (binaryfunc) NULL,                      /*sg_inplace_concat */
-    (ssizeargfunc)NULL,
-};
 
 
 /****************** End of Sequence Protocol ****************************/

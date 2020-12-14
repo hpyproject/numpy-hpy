@@ -1791,6 +1791,14 @@ static PyNumberMethods array_as_number = {
     .nb_inplace_matrix_multiply = (binaryfunc)array_inplace_matrix_multiply,
 };
 
+static PySequenceMethods array_as_sequence = {
+    .sq_length = (lenfunc)array_length,
+    .sq_concat = (binaryfunc)array_concat,
+    .sq_item = (ssizeargfunc)array_item,
+    .sq_ass_item = (ssizeobjargproc)array_assign_item,
+    .sq_contains = (objobjproc)array_contains,
+};
+
 NPY_NO_EXPORT PyTypeObject PyArray_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "numpy.ndarray",
