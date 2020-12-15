@@ -100,6 +100,7 @@ set_legacy_print_mode(PyObject *NPY_UNUSED(self), PyObject *args)
     Py_RETURN_NONE;
 }
 
+NPY_NO_EXPORT PyTypeObject* _PyArray_Type_p = NULL;
 
 /* Only here for API compatibility */
 NPY_NO_EXPORT PyTypeObject PyBigArray_Type;

@@ -1,6 +1,8 @@
 #ifndef _NPY_MULTIARRAY_H_
 #define _NPY_MULTIARRAY_H_
 
+extern NPY_NO_EXPORT PyTypeObject* _PyArray_Type_p;
+
 NPY_VISIBILITY_HIDDEN extern PyObject * npy_ma_str_array;
 NPY_VISIBILITY_HIDDEN extern PyObject * npy_ma_str_array_prepare;
 NPY_VISIBILITY_HIDDEN extern PyObject * npy_ma_str_array_wrap;
