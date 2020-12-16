@@ -21,6 +21,7 @@ extern NPY_NO_EXPORT PyBoolScalarObject _PyArrayScalar_BoolValues[2];
 
 %s
 
+
 #else
 
 #if defined(PY_ARRAY_UNIQUE_SYMBOL)
@@ -68,8 +69,6 @@ _import_array(void)
       PyErr_SetString(PyExc_RuntimeError, "_ARRAY_API is NULL pointer");
       return -1;
   }
-
-%s
 
   /* Perform runtime check of C API version */
   if (NPY_VERSION != PyArray_GetNDArrayCVersion()) {
@@ -131,6 +130,10 @@ c_template = r"""
 void *PyArray_API[] = {
 %s
 };
+
+static void init_array_api() {
+%s
+}
 """
 
 c_api_header = """
@@ -231,12 +234,14 @@ def do_generate_api(targets, sources):
     # Write to header
     s = h_template % (
         '\n'.join(module_list),
-        '\n'.join(extension_list),
-        '\n'.join(assign_list))
+        '\n'.join(extension_list))
     genapi.write_file(header_file, s)
 
     # Write to c-code
-    s = c_template % ',\n'.join(init_list)
+    s = c_template % (
+        ',\n'.join(init_list),
+        '\n'.join(assign_list),
+    )
     genapi.write_file(c_file, s)
 
     # write to documentation
