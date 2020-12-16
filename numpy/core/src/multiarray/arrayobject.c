@@ -1819,10 +1819,3 @@ NPY_NO_EXPORT PyType_Spec PyArray_Type_spec = {
     .flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
     .slots = PyArray_Type_slots,
 };
-
-//NPY_NO_EXPORT PyTypeObject PyArray_Type = {
-//    /* methods */
-//    .tp_as_buffer = &array_as_buffer,
-//
-//    .tp_weaklistoffset = offsetof(PyArrayObject_fields, weakreflist),
-//};
