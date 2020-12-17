@@ -498,6 +498,14 @@ array_dealloc(PyArrayObject *self)
     /* must match allocation in PyArray_NewFromDescr */
     npy_free_cache_dim(fa->dimensions, 2 * fa->nd);
     Py_DECREF(fa->descr);
+
+    /*
+     * If tp_dealloc is overridden, the overrider is responsible for
+     * decrefing the type
+     */
+    if (Py_TYPE(self)->tp_dealloc == (destructor)array_dealloc) {
+        Py_DECREF(Py_TYPE(self));
+    }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -1733,6 +1741,11 @@ array_alloc(PyTypeObject *type, Py_ssize_t NPY_UNUSED(nitems))
     /* nitems will always be 0 */
     PyObject *obj = PyObject_Malloc(type->tp_basicsize);
     PyObject_Init(obj, type);
+#if PY_VERSION_HEX < 0x03080000
+    // Workaround for Python issue 35810; no longer necessary in Python 3.8
+    Py_INCREF(type);
+#endif
+
     return obj;
 }
 
