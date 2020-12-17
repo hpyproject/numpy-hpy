@@ -1796,11 +1796,6 @@ static PyType_Slot PyArray_Type_slots[] = {
 
     {Py_tp_dealloc, (destructor)array_dealloc},
     {Py_tp_repr, (reprfunc)array_repr},
-    /*
-     * The tp_hash slot will be set PyObject_HashNotImplemented when the
-     * module is loaded.
-     */
-    {Py_tp_hash, PyObject_HashNotImplemented},
     {Py_tp_str, (reprfunc)array_str},
 
     {Py_tp_richcompare, (richcmpfunc)array_richcompare},
