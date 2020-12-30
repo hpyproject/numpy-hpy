@@ -4596,9 +4596,6 @@ PyMODINIT_FUNC PyInit__multiarray_umath(void) {
     PyArray_Type.tp_as_buffer = &array_as_buffer;
     PyArray_Type.tp_weaklistoffset = offsetof(PyArrayObject_fields, weakreflist);
 
-    /*if (PyType_Ready(&PyArray_Type) < 0) {
-        goto err;
-    }*/
     if (setup_scalartypes(d) < 0) {
         goto err;
     }

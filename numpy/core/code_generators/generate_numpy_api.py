@@ -21,7 +21,6 @@ extern NPY_NO_EXPORT PyBoolScalarObject _PyArrayScalar_BoolValues[2];
 
 %s
 
-
 #else
 
 #if defined(PY_ARRAY_UNIQUE_SYMBOL)
