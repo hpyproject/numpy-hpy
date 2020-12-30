@@ -313,13 +313,15 @@ def write_file(filename, data):
 
 # Those *Api classes instances know how to output strings for the generated code
 class TypeApi:
-    def __init__(self, name, index, ptr_cast, api_name, internal_type=None):
+    def __init__(self, name, index, ptr_cast, api_name, internal_type=None,
+                 dynamic_init=None):
         self.index = index
         self.name = name
         self.ptr_cast = ptr_cast
         self.api_name = api_name
         # The type used internally, if None, same as exported (ptr_cast)
         self.internal_type = internal_type
+        self.dynamic_init = dynamic_init
 
     def define_from_array_api_string(self):
         return "#define %s (*(%s *)%s[%d])" % (self.name,
@@ -328,22 +330,38 @@ class TypeApi:
                                                self.index)
 
     def array_api_define(self):
-        return "        (void *) &%s" % self.name
+        if self.dynamic_init:
+            return "        NULL"
+        else:
+            return "        (void *) &%s" % self.name
+
+    def array_api_assign(self):
+        if self.dynamic_init:
+            return f"  PyArray_API[{self.index}] = {self.dynamic_init};"
+        else:
+            return None
 
     def internal_define(self):
-        if self.internal_type is None:
-            return f"extern NPY_NO_EXPORT {self.ptr_cast} {self.name};\n"
+        if self.internal_type:
+            # If we are here, we need to define a larger struct internally, which
+            # the type can be cast safely. But we want to normally use the original
+            # type, so name mangle:
+            mangled_name = f"{self.name}Full"
+            astr = (
+                # Create the mangled name:
+                f"extern NPY_NO_EXPORT {self.internal_type} {mangled_name};\n"
+                # And define the name as: (*(type *)(&mangled_name))
+                f"#define {self.name} (*({self.ptr_cast} *)(&{mangled_name}))\n"
+            )
+        elif self.dynamic_init:
+            ptr_name = f"_{self.name}_p"
+            astr = (
+                f"extern NPY_NO_EXPORT {self.ptr_cast} *{ptr_name};\n"
+                f"#define {self.name} (*{ptr_name})\n"
+            )
+        else:
+            astr = f"extern NPY_NO_EXPORT {self.ptr_cast} {self.name};\n"
 
-        # If we are here, we need to define a larger struct internally, which
-        # the type can be cast safely. But we want to normally use the original
-        # type, so name mangle:
-        mangled_name = f"{self.name}Full"
-        astr = (
-            # Create the mangled name:
-            f"extern NPY_NO_EXPORT {self.internal_type} {mangled_name};\n"
-            # And define the name as: (*(type *)(&mangled_name))
-            f"#define {self.name} (*({self.ptr_cast} *)(&{mangled_name}))\n"
-        )
         return astr
 
 class GlobalVarApi:
@@ -361,6 +379,9 @@ class GlobalVarApi:
 
     def array_api_define(self):
         return "        (%s *) &%s" % (self.type, self.name)
+
+    def array_api_assign(self):
+        return None
 
     def internal_define(self):
         astr = """\
@@ -385,6 +406,9 @@ class BoolValuesApi:
 
     def array_api_define(self):
         return "        (void *) &%s" % self.name
+
+    def array_api_assign(self):
+        return None
 
     def internal_define(self):
         astr = """\
@@ -419,6 +443,9 @@ class FunctionApi:
 
     def array_api_define(self):
         return "        (void *) %s" % self.name
+
+    def array_api_assign(self):
+        return None
 
     def internal_define(self):
         annstr = [str(a) for a in self.annotations]

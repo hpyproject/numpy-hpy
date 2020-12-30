@@ -129,6 +129,10 @@ c_template = r"""
 void *PyArray_API[] = {
 %s
 };
+
+static void init_array_api() {
+%s
+}
 """
 
 c_api_header = """
@@ -169,6 +173,7 @@ def do_generate_api(targets, sources):
     module_list = []
     extension_list = []
     init_list = []
+    assign_list = []
 
     # Check multiarray api indexes
     multiarray_api_index = genapi.merge_api_dicts(multiarray_api)
@@ -201,9 +206,10 @@ def do_generate_api(targets, sources):
 
     for name, val in types_api.items():
         index = val[0]
-        internal_type =  None if len(val) == 1 else val[1]
+        internal_type = None if len(val) <= 1 else val[1]
+        dynamic_init = None if len(val) <= 2 else val[2]
         multiarray_api_dict[name] = TypeApi(
-            name, index, 'PyTypeObject', api_name, internal_type)
+            name, index, 'PyTypeObject', api_name, internal_type, dynamic_init)
 
     if len(multiarray_api_dict) != len(multiarray_api_index):
         keys_dict = set(multiarray_api_dict.keys())
@@ -219,14 +225,22 @@ def do_generate_api(targets, sources):
         api_item = multiarray_api_dict[name]
         extension_list.append(api_item.define_from_array_api_string())
         init_list.append(api_item.array_api_define())
+        assignment = api_item.array_api_assign()
+        if assignment:
+            assign_list.append(assignment)
         module_list.append(api_item.internal_define())
 
     # Write to header
-    s = h_template % ('\n'.join(module_list), '\n'.join(extension_list))
+    s = h_template % (
+        '\n'.join(module_list),
+        '\n'.join(extension_list))
     genapi.write_file(header_file, s)
 
     # Write to c-code
-    s = c_template % ',\n'.join(init_list)
+    s = c_template % (
+        ',\n'.join(init_list),
+        '\n'.join(assign_list),
+    )
     genapi.write_file(c_file, s)
 
     # write to documentation
