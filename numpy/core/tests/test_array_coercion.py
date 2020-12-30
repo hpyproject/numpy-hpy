@@ -38,8 +38,18 @@ def arraylikes():
 
     yield subclass
 
+    class _SequenceLike():
+        # We are giving a warning that array-like's were also expected to be
+        # sequence-like in `np.array([array_like])`, this can be removed
+        # when the deprecation exired (started NumPy 1.20)
+        def __len__(self):
+            raise TypeError
+
+        def __getitem__(self):
+            raise TypeError
+
     # Array-interface
-    class ArrayDunder:
+    class ArrayDunder(_SequenceLike):
         def __init__(self, a):
             self.a = a
 
@@ -52,7 +62,7 @@ def arraylikes():
     yield param(memoryview, id="memoryview")
 
     # Array-interface
-    class ArrayInterface:
+    class ArrayInterface(_SequenceLike):
         def __init__(self, a):
             self.a = a  # need to hold on to keep interface valid
             self.__array_interface__ = a.__array_interface__
@@ -60,7 +70,7 @@ def arraylikes():
     yield param(ArrayInterface, id="__array_interface__")
 
     # Array-Struct
-    class ArrayStruct:
+    class ArrayStruct(_SequenceLike):
         def __init__(self, a):
             self.a = a  # need to hold on to keep struct valid
             self.__array_struct__ = a.__array_struct__
@@ -689,3 +699,33 @@ class TestArrayLikes:
                 np.array(arr)
             with pytest.raises(MemoryError):
                 np.array([arr])
+
+    @pytest.mark.parametrize("attribute",
+        ["__array_interface__", "__array__", "__array_struct__"])
+    def test_bad_array_like_attributes(self, attribute):
+        # Check that errors during attribute retrieval are raised unless
+        # they are Attribute errors.
+
+        class BadInterface:
+            def __getattr__(self, attr):
+                if attr == attribute:
+                    raise RuntimeError
+                super().__getattr__(attr)
+
+        with pytest.raises(RuntimeError):
+            np.array(BadInterface())
+
+    @pytest.mark.parametrize("error", [RecursionError, MemoryError])
+    def test_bad_array_like_bad_length(self, error):
+        # RecursionError and MemoryError are considered "critical" in
+        # sequences. We could expand this more generally though. (NumPy 1.20)
+        class BadSequence:
+            def __len__(self):
+                raise error
+            def __getitem__(self):
+                # must have getitem to be a Sequence
+                return 1
+
+        with pytest.raises(error):
+            np.array(BadSequence())
+
