@@ -24,8 +24,17 @@ import sys
 import subprocess
 import textwrap
 import warnings
-import versioneer
 import builtins
+
+
+# Python supported version checks. Keep right after stdlib imports to ensure we
+# get a sensible error for older Python versions
+if sys.version_info[:2] < (3, 7):
+    raise RuntimeError("Python version >= 3.7 required.")
+
+
+import versioneer
+
 
 # This is a bit hackish: we are setting a global variable so that the main
 # numpy __init__ can detect if it is being loaded by the setup routine, to
@@ -41,17 +50,13 @@ ISRELEASED = 'dev' not in FULLVERSION
 MAJOR, MINOR, MICRO = FULLVERSION.split('.')[:3]
 VERSION = '{}.{}.{}'.format(MAJOR, MINOR, MICRO)
 
-# Python supported version checks
-if sys.version_info[:2] < (3, 7):
-    raise RuntimeError("Python version >= 3.7 required.")
-
 # The first version not in the `Programming Language :: Python :: ...` classifiers above
 if sys.version_info >= (3, 10):
+    fmt = "NumPy {} may not yet support Python {}.{}."
     warnings.warn(
-        f"NumPy {VERSION} may not yet support Python "
-        f"{sys.version_info.major}.{sys.version_info.minor}.",
-        RuntimeWarning,
-    )
+        fmt.format(VERSION, *sys.version_info[:2]),
+        RuntimeWarning)
+    del fmt
 
 # BEFORE importing setuptools, remove MANIFEST. Otherwise it may not be
 # properly updated when the contents of directories change (true for distutils,
@@ -60,8 +65,10 @@ if os.path.exists('MANIFEST'):
     os.remove('MANIFEST')
 
 # We need to import setuptools here in order for it to persist in sys.modules.
-# Its presence/absence is used in subclassing setup in numpy/distutils/core.py,
-# which may not be the most robust design.
+# Its presence/absence is used in subclassing setup in numpy/distutils/core.py.
+# However, we need to run the distutils version of sdist, so import that first
+# so that it is in sys.modules
+import numpy.distutils.command.sdist
 import setuptools
 
 # Initialize cmdclass from versioneer
@@ -158,13 +165,14 @@ class concat_license_files():
             f.write(self.bsd_text)
 
 
-sdist_class = cmdclass['sdist']
-class sdist_checked(sdist_class):
+# Need to inherit from versioneer version of sdist to get the encoded
+# version information.
+class sdist_checked(cmdclass['sdist']):
     """ check submodules on sdist to prevent incomplete tarballs """
     def run(self):
         check_submodules()
         with concat_license_files():
-            sdist_class.run(self)
+            super().run()
 
 
 def get_build_overrides():
@@ -237,7 +245,8 @@ def parse_setuppy_commands():
                      '--maintainer', '--maintainer-email', '--contact',
                      '--contact-email', '--url', '--license', '--description',
                      '--long-description', '--platforms', '--classifiers',
-                     '--keywords', '--provides', '--requires', '--obsoletes']
+                     '--keywords', '--provides', '--requires', '--obsoletes',
+                     'version',]
 
     for command in info_commands:
         if command in args:
@@ -248,8 +257,7 @@ def parse_setuppy_commands():
     # below and not standalone.  Hence they're not added to good_commands.
     good_commands = ('develop', 'sdist', 'build', 'build_ext', 'build_py',
                      'build_clib', 'build_scripts', 'bdist_wheel', 'bdist_rpm',
-                     'bdist_wininst', 'bdist_msi', 'bdist_mpkg', 'build_src',
-                     'version')
+                     'bdist_wininst', 'bdist_msi', 'bdist_mpkg', 'build_src',)
 
     for command in good_commands:
         if command in args:
@@ -337,17 +345,13 @@ def parse_setuppy_commands():
 
     # Commands that do more than print info, but also don't need Cython and
     # template parsing.
-    other_commands = ['egg_info', 'install_egg_info', 'rotate']
+    other_commands = ['egg_info', 'install_egg_info', 'rotate', 'dist_info']
     for command in other_commands:
         if command in args:
             return False
 
     # If we got here, we didn't detect what setup.py command was given
-    import warnings
-    warnings.warn("Unrecognized setuptools command, proceeding with "
-                  "generating Cython sources and expanding templates",
-                  stacklevel=2)
-    return True
+    raise RuntimeError("Unrecognized setuptools command: {}".format(args))
 
 
 def get_docs_url():
@@ -413,7 +417,7 @@ def setup_package():
         # Raise errors for unsupported commands, improve help output, etc.
         run_build = parse_setuppy_commands()
 
-    if run_build and 'version' not in sys.argv:
+    if run_build:
         # patches distutils, even though we don't use it
         #from setuptools import setup
         from numpy.distutils.core import setup

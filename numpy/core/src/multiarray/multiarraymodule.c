@@ -450,17 +450,10 @@ PyArray_ConcatenateArrays(int narrays, PyArrayObject **arrays, int axis,
 
         /* Get the priority subtype for the array */
         PyTypeObject *subtype = PyArray_GetSubType(narrays, arrays);
-
-        if (dtype == NULL) {
-            /* Get the resulting dtype from combining all the arrays */
-            dtype = (PyArray_Descr *)PyArray_ResultType(
-                                                narrays, arrays, 0, NULL);
-            if (dtype == NULL) {
-                return NULL;
-            }
-        }
-        else {
-            Py_INCREF(dtype);
+        PyArray_Descr *descr = PyArray_FindConcatenationDescriptor(
+                narrays, arrays,  (PyObject *)dtype);
+        if (descr == NULL) {
+            return NULL;
         }
 
         /*
@@ -469,7 +462,7 @@ PyArray_ConcatenateArrays(int narrays, PyArrayObject **arrays, int axis,
          * resolution rules matching that of the NpyIter.
          */
         PyArray_CreateMultiSortedStridePerm(narrays, arrays, ndim, strideperm);
-        s = dtype->elsize;
+        s = descr->elsize;
         for (idim = ndim-1; idim >= 0; --idim) {
             int iperm = strideperm[idim];
             strides[iperm] = s;
@@ -477,17 +470,13 @@ PyArray_ConcatenateArrays(int narrays, PyArrayObject **arrays, int axis,
         }
 
         /* Allocate the array for the result. This steals the 'dtype' reference. */
-        ret = (PyArrayObject *)PyArray_NewFromDescr(subtype,
-                                                        dtype,
-                                                        ndim,
-                                                        shape,
-                                                        strides,
-                                                        NULL,
-                                                        0,
-                                                        NULL);
+        ret = (PyArrayObject *)PyArray_NewFromDescr_int(
+                subtype, descr, ndim, shape, strides, NULL, 0, NULL,
+                NULL, 0, 1);
         if (ret == NULL) {
             return NULL;
         }
+        assert(PyArray_DESCR(ret) == descr);
     }
 
     /*
@@ -577,32 +566,22 @@ PyArray_ConcatenateFlattenedArrays(int narrays, PyArrayObject **arrays,
         /* Get the priority subtype for the array */
         PyTypeObject *subtype = PyArray_GetSubType(narrays, arrays);
 
-        if (dtype == NULL) {
-            /* Get the resulting dtype from combining all the arrays */
-            dtype = (PyArray_Descr *)PyArray_ResultType(
-                                            narrays, arrays, 0, NULL);
-            if (dtype == NULL) {
-                return NULL;
-            }
-        }
-        else {
-            Py_INCREF(dtype);
+        PyArray_Descr *descr = PyArray_FindConcatenationDescriptor(
+                narrays, arrays, (PyObject *)dtype);
+        if (descr == NULL) {
+            return NULL;
         }
 
-        stride = dtype->elsize;
+        stride = descr->elsize;
 
         /* Allocate the array for the result. This steals the 'dtype' reference. */
-        ret = (PyArrayObject *)PyArray_NewFromDescr(subtype,
-                                                        dtype,
-                                                        1,
-                                                        &shape,
-                                                        &stride,
-                                                        NULL,
-                                                        0,
-                                                        NULL);
+        ret = (PyArrayObject *)PyArray_NewFromDescr_int(
+                subtype, descr,  1, &shape, &stride, NULL, 0, NULL,
+                NULL, 0, 1);
         if (ret == NULL) {
             return NULL;
         }
+        assert(PyArray_DESCR(ret) == descr);
     }
 
     /*
@@ -4087,6 +4066,42 @@ normalize_axis_index(PyObject *NPY_UNUSED(self), PyObject *args, PyObject *kwds)
 }
 
 
+static PyObject *
+_reload_guard(PyObject *NPY_UNUSED(self)) {
+    static int initialized = 0;
+
+#if !defined(PYPY_VERSION)
+    if (PyThreadState_Get()->interp != PyInterpreterState_Main()) {
+        if (PyErr_WarnEx(PyExc_UserWarning,
+                "NumPy was imported from a Python sub-interpreter but "
+                "NumPy does not properly support sub-interpreters. "
+                "This will likely work for most users but might cause hard to "
+                "track down issues or subtle bugs. "
+                "A common user of the rare sub-interpreter feature is wsgi "
+                "which also allows single-interpreter mode.\n"
+                "Improvements in the case of bugs are welcome, but is not "
+                "on the NumPy roadmap, and full support may require "
+                "significant effort to achieve.", 2) < 0) {
+            return NULL;
+        }
+        /* No need to give the other warning in a sub-interpreter as well... */
+        initialized = 1;
+        Py_RETURN_NONE;
+    }
+#endif
+    if (initialized) {
+        if (PyErr_WarnEx(PyExc_UserWarning,
+                "The NumPy module was reloaded (imported a second time). "
+                "This can in some cases result in small but subtle issues "
+                "and is discouraged.", 2) < 0) {
+            return NULL;
+        }
+    }
+    initialized = 1;
+    Py_RETURN_NONE;
+}
+
+
 static struct PyMethodDef array_module_methods[] = {
     {"_get_implementing_args",
         (PyCFunction)array__get_implementing_args,
@@ -4278,6 +4293,9 @@ static struct PyMethodDef array_module_methods[] = {
         METH_VARARGS, NULL},
     {"_set_madvise_hugepage", (PyCFunction)_set_madvise_hugepage,
         METH_O, NULL},
+    {"_reload_guard", (PyCFunction)_reload_guard,
+        METH_NOARGS,
+        "Give a warning on reload and big warning in sub-interpreters."},
     {NULL, NULL, 0, NULL}                /* sentinel */
 };
 
