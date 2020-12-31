@@ -653,6 +653,10 @@ def configuration(parent_package='',top_path=None):
             join(codegen_dir, 'genapi.py'),
             ]
 
+    from hpy.devel import HPyDevel
+    hpy_include_dirs = HPyDevel().get_extra_include_dirs()
+    config.add_include_dirs(*hpy_include_dirs)
+
     #######################################################################
     #                          npymath library                            #
     #######################################################################

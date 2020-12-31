@@ -17,6 +17,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include "structmember.h"
+#include "hpy.h"
 
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
 #define _UMATHMODULE
@@ -4524,6 +4525,7 @@ static struct PyModuleDef moduledef = {
 PyMODINIT_FUNC PyInit__multiarray_umath(void) {
     PyObject *m, *d, *s;
     PyObject *c_api;
+    HPyContext ctx = _HPyGetContext();
 
     /* Initialize CPU features */
     if (npy_cpu_init() < 0) {
