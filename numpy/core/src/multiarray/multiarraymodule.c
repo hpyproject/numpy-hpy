@@ -4590,13 +4590,14 @@ PyMODINIT_FUNC PyInit__multiarray_umath(void) {
         goto err;
     }
 
-    PyObject *array_type = PyType_FromSpec(&PyArray_Type_spec);
-    if (array_type == NULL) {
+    HPy h_array_type = HPyType_FromSpec(ctx, &PyArray_Type_spec, NULL);
+    if (HPy_IsNull(h_array_type)) {
         goto err;
     }
-    _PyArray_Type_p = (PyTypeObject*)array_type;
+    _PyArray_Type_p = (PyTypeObject*)HPy_AsPyObject(ctx, h_array_type);
     PyArray_Type.tp_as_buffer = &array_as_buffer;
     PyArray_Type.tp_weaklistoffset = offsetof(PyArrayObject_fields, weakreflist);
+    HPy_Close(ctx, h_array_type);
 
     if (setup_scalartypes(d) < 0) {
         goto err;
@@ -4727,7 +4728,7 @@ PyMODINIT_FUNC PyInit__multiarray_umath(void) {
     ADDCONST(MAY_SHARE_EXACT);
 #undef ADDCONST
 
-    PyDict_SetItemString(d, "ndarray", array_type);
+    PyDict_SetItemString(d, "ndarray", (PyObject*)&PyArray_Type);
     PyDict_SetItemString(d, "flatiter", (PyObject *)&PyArrayIter_Type);
     PyDict_SetItemString(d, "nditer", (PyObject *)&NpyIter_Type);
     PyDict_SetItemString(d, "broadcast",

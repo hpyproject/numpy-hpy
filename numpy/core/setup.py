@@ -654,8 +654,10 @@ def configuration(parent_package='',top_path=None):
             ]
 
     from hpy.devel import HPyDevel
-    hpy_include_dirs = HPyDevel().get_extra_include_dirs()
+    hpy_devel = HPyDevel()
+    hpy_include_dirs = hpy_devel.get_extra_include_dirs()
     config.add_include_dirs(*hpy_include_dirs)
+    hpy_sources = hpy_devel.get_extra_sources() + hpy_devel.get_ctx_sources()
 
     #######################################################################
     #                          npymath library                            #
@@ -897,6 +899,7 @@ def configuration(parent_package='',top_path=None):
             join('src', 'common', 'npy_binsearch.h.src'),
             join('src', 'npysort', 'binsearch.c.src'),
             ]
+    multiarray_src += hpy_sources
 
     #######################################################################
     #             _multiarray_umath module - umath part                   #
