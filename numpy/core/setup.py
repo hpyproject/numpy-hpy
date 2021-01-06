@@ -657,7 +657,11 @@ def configuration(parent_package='',top_path=None):
     hpy_devel = HPyDevel()
     hpy_include_dirs = hpy_devel.get_extra_include_dirs()
     config.add_include_dirs(*hpy_include_dirs)
-    hpy_sources = hpy_devel.get_extra_sources() + hpy_devel.get_ctx_sources()
+    hpy_sources = hpy_devel.get_extra_sources()
+    if '__pypy__' in sys.builtin_module_names:
+        config.add_define_macros([("HPY_UNIVERSAL_ABI", None)])
+    else:
+        hpy_sources += hpy_devel.get_ctx_sources()
 
     #######################################################################
     #                          npymath library                            #
