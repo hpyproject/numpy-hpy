@@ -4773,7 +4773,6 @@ static HPy init__multiarray_umath_impl(HPyContext ctx) {
     return HPy_FromPyObject(ctx, m);
 
  err:
-    Py_XDECREF(m);
     if (!PyErr_Occurred()) {
         PyErr_SetString(PyExc_RuntimeError,
                         "cannot load multiarray module.");
