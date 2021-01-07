@@ -405,6 +405,7 @@ def setup_package():
         cmdclass=cmdclass,
         python_requires='>=3.7',
         zip_safe=False,
+        setup_requires=['hpy.devel'],
         entry_points={
             'console_scripts': f2py_cmds
         },
