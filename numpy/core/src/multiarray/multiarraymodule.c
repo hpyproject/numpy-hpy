@@ -4522,10 +4522,10 @@ static struct PyModuleDef moduledef = {
 };
 
 /* Initialization function for the module */
-PyMODINIT_FUNC PyInit__multiarray_umath(void) {
+HPy_MODINIT(_multiarray_umath)
+static HPy init__multiarray_umath_impl(HPyContext ctx) {
     PyObject *m, *d, *s;
     PyObject *c_api;
-    HPyContext ctx = _HPyGetContext();
 
     /* Initialize CPU features */
     if (npy_cpu_init() < 0) {
@@ -4770,12 +4770,13 @@ PyMODINIT_FUNC PyInit__multiarray_umath(void) {
     if (initumath(m) != 0) {
         goto err;
     }
-    return m;
+    return HPy_FromPyObject(ctx, m);
 
  err:
+    Py_XDECREF(m);
     if (!PyErr_Occurred()) {
         PyErr_SetString(PyExc_RuntimeError,
                         "cannot load multiarray module.");
     }
-    return NULL;
+    return HPy_NULL;
 }
