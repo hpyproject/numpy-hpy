@@ -406,6 +406,9 @@ def setup_package():
         python_requires='>=3.7',
         zip_safe=False,
         setup_requires=['hpy.devel'],
+        # distuils doesn't load hpy.devel unless hpy_ext_modules is present
+        # as a keyword
+        hpy_ext_modules=[],
         entry_points={
             'console_scripts': f2py_cmds
         },
