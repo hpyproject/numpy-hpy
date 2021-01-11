@@ -132,6 +132,7 @@ else:
             so_ext2 = get_shared_lib_extension(is_python_ext=True)
             if not so_ext2 == so_ext:
                 libname_ext.insert(0, libname + so_ext2)
+            libname_ext.insert(0, libname + '.hpy.so')
         else:
             libname_ext = [libname]
 
