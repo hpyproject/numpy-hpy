@@ -4511,7 +4511,10 @@ intern_strings(void)
 
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        "_multiarray_umath",
+        /* XXX: Unclear if a dotted name is legit in .m_name, but universal
+         * mode requires it.
+         */
+        "numpy.core._multiarray_umath",
         NULL,
         -1,
         array_module_methods,
