@@ -23,6 +23,7 @@ maintainer email:  oliphant.travis@ieee.org
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "structmember.h"
+#include "hpy.h"
 
 /*#include <stdio.h>*/
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
@@ -1821,9 +1822,9 @@ static PyType_Slot PyArray_Type_slots[] = {
     {0, NULL},
 };
 
-NPY_NO_EXPORT PyType_Spec PyArray_Type_spec = {
+NPY_NO_EXPORT HPyType_Spec PyArray_Type_spec = {
     .name = "numpy.ndarray",
     .basicsize = sizeof(PyArrayObject_fields),
-    .flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    .slots = PyArray_Type_slots,
+    .flags = (HPy_TPFLAGS_DEFAULT | HPy_TPFLAGS_BASETYPE),
+    .legacy_slots = PyArray_Type_slots,
 };

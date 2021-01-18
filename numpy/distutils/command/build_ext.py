@@ -6,7 +6,7 @@ import subprocess
 from glob import glob
 
 from distutils.dep_util import newer_group
-from distutils.command.build_ext import build_ext as old_build_ext
+from setuptools.command.build_ext import build_ext as old_build_ext
 from distutils.errors import DistutilsFileError, DistutilsSetupError,\
     DistutilsError
 from distutils.file_util import copy_file
@@ -542,6 +542,10 @@ class build_ext (old_build_ext):
                debug=self.debug,
                build_temp=self.build_temp,
                target_lang=ext.language)
+
+        if ext._needs_stub:
+            cmd = self.get_finalized_command('build_py').build_lib
+            self.write_stub(cmd, ext)
 
     def _add_dummy_mingwex_sym(self, c_sources):
         build_src = self.get_finalized_command("build_src").build_src

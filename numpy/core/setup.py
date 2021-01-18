@@ -944,7 +944,7 @@ def configuration(parent_package='',top_path=None):
             join(codegen_dir, 'generate_ufunc_api.py'),
             ]
 
-    config.add_extension('_multiarray_umath',
+    config.add_hpy_extension('_multiarray_umath',
                          sources=multiarray_src + umath_src +
                                  common_src +
                                  [generate_config_h,

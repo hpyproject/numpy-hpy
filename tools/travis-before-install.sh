@@ -49,6 +49,7 @@ pip install --upgrade pip 'setuptools<49.2.0' wheel
 # requirement using `grep cython test_requirements.txt` instead of simply
 # writing 'pip install setuptools wheel cython'.
 pip install `grep cython test_requirements.txt`
+pip install `grep hpy.devel test_requirements.txt`
 
 if [ -n "$DOWNLOAD_OPENBLAS" ]; then
   pwd

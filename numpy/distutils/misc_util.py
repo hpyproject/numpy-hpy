@@ -726,7 +726,8 @@ def get_frame(level=0):
 
 class Configuration:
 
-    _list_keys = ['packages', 'ext_modules', 'data_files', 'include_dirs',
+    _list_keys = ['packages', 'ext_modules', 'hpy_ext_modules', 'data_files',
+                  'include_dirs',
                   'libraries', 'headers', 'scripts', 'py_modules',
                   'installed_libraries', 'define_macros']
     _dict_keys = ['package_dir', 'installed_pkg_config']
@@ -1456,6 +1457,31 @@ class Configuration:
         The self.paths(...) method is applied to all lists that may contain
         paths.
         """
+        from numpy.distutils.core import Extension
+        ext_args = self._process_extension_args(name, sources, **kw)
+        ext = Extension(**ext_args)
+        self.ext_modules.append(ext)
+
+        dist = self.get_distribution()
+        if dist is not None:
+            self.warn('distutils distribution has been initialized,'\
+                      ' it may be too late to add an extension '+name)
+        return ext
+
+    def add_hpy_extension(self, name, sources, **kw):
+        from numpy.distutils.core import Extension
+        ext_args = self._process_extension_args(name, sources, **kw)
+        ext = Extension(**ext_args)
+        self.hpy_ext_modules.append(ext)
+
+        dist = self.get_distribution()
+        if dist is not None:
+            self.warn('distutils distribution has been initialized,'\
+                      ' it may be too late to add an extension '+name)
+        return ext
+
+
+    def _process_extension_args(self, name, sources, **kw):
         ext_args = copy.copy(kw)
         ext_args['name'] = dot_join(self.name, name)
         ext_args['sources'] = sources
@@ -1500,16 +1526,7 @@ class Configuration:
         ext_args['libraries'] = libnames + ext_args['libraries']
         ext_args['define_macros'] = \
             self.define_macros + ext_args.get('define_macros', [])
-
-        from numpy.distutils.core import Extension
-        ext = Extension(**ext_args)
-        self.ext_modules.append(ext)
-
-        dist = self.get_distribution()
-        if dist is not None:
-            self.warn('distutils distribution has been initialized,'\
-                      ' it may be too late to add an extension '+name)
-        return ext
+        return ext_args
 
     def add_library(self,name,sources,**build_info):
         """

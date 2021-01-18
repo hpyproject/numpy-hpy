@@ -13,3 +13,5 @@ cffi
 # - Mypy doesn't currently work on Python 3.9
 mypy==0.790; platform_python_implementation != "PyPy"
 typing_extensions
+# HPy
+git+https://github.com/hpyproject/hpy.git@8e20b89116c2993188157c09a6070a64f8efbd82#egg=hpy.devel
