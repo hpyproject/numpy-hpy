@@ -1,7 +1,8 @@
 #ifndef _NPY_PRIVATE_BUFFER_H_
 #define _NPY_PRIVATE_BUFFER_H_
+#include "hpy.h"
 
-extern NPY_NO_EXPORT PyBufferProcs array_as_buffer;
+extern NPY_NO_EXPORT HPyDef array_getbuffer;
 
 NPY_NO_EXPORT int
 _buffer_info_free(void *buffer_info, PyObject *obj);
