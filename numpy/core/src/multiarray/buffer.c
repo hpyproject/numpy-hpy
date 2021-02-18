@@ -839,6 +839,7 @@ array_getbuffer_impl(HPyContext ctx, HPy h_obj, HPy_buffer *view, int flags)
     return 0;
 
 fail:
+    Py_DECREF(obj);
     return -1;
 }
 
