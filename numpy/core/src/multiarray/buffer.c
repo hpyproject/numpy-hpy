@@ -761,23 +761,23 @@ array_getbuffer_impl(HPyContext ctx, HPy h_obj, HPy_buffer *view, int flags)
     /* Check whether we can provide the wanted properties */
     if ((flags & PyBUF_C_CONTIGUOUS) == PyBUF_C_CONTIGUOUS &&
             !PyArray_CHKFLAGS(self, NPY_ARRAY_C_CONTIGUOUS)) {
-        PyErr_SetString(PyExc_ValueError, "ndarray is not C-contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not C-contiguous");
         goto fail;
     }
     if ((flags & PyBUF_F_CONTIGUOUS) == PyBUF_F_CONTIGUOUS &&
             !PyArray_CHKFLAGS(self, NPY_ARRAY_F_CONTIGUOUS)) {
-        PyErr_SetString(PyExc_ValueError, "ndarray is not Fortran contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not Fortran contiguous");
         goto fail;
     }
     if ((flags & PyBUF_ANY_CONTIGUOUS) == PyBUF_ANY_CONTIGUOUS
             && !PyArray_ISONESEGMENT(self)) {
-        PyErr_SetString(PyExc_ValueError, "ndarray is not contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not contiguous");
         goto fail;
     }
     if ((flags & PyBUF_STRIDES) != PyBUF_STRIDES &&
             !PyArray_CHKFLAGS(self, NPY_ARRAY_C_CONTIGUOUS)) {
         /* Non-strided N-dim buffers must be C-contiguous */
-        PyErr_SetString(PyExc_ValueError, "ndarray is not C-contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not C-contiguous");
         goto fail;
     }
     if ((flags & PyBUF_WRITEABLE) == PyBUF_WRITEABLE) {
@@ -787,7 +787,7 @@ array_getbuffer_impl(HPyContext ctx, HPy h_obj, HPy_buffer *view, int flags)
     }
 
     if (view == NULL) {
-        PyErr_SetString(PyExc_ValueError, "NULL view in getbuffer");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "NULL view in getbuffer");
         goto fail;
     }
 
