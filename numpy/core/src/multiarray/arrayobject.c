@@ -1822,9 +1822,15 @@ static PyType_Slot PyArray_Type_slots[] = {
     {0, NULL},
 };
 
+static HPyDef *array_defines[] = {
+    &array_getbuffer,
+    NULL,
+};
+
 NPY_NO_EXPORT HPyType_Spec PyArray_Type_spec = {
     .name = "numpy.ndarray",
     .basicsize = sizeof(PyArrayObject_fields),
     .flags = (HPy_TPFLAGS_DEFAULT | HPy_TPFLAGS_BASETYPE),
+    .defines = array_defines,
     .legacy_slots = PyArray_Type_slots,
 };

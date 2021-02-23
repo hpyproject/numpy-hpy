@@ -1,5 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "hpy.h"
 #include "structmember.h"
 
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
@@ -747,34 +748,36 @@ _buffer_get_info(void **buffer_info_cache_ptr, PyObject *obj, int flags)
 /*
  * Retrieving buffers for ndarray
  */
+HPyDef_SLOT(array_getbuffer, array_getbuffer_impl, HPy_bf_getbuffer)
 static int
-array_getbuffer(PyObject *obj, Py_buffer *view, int flags)
+array_getbuffer_impl(HPyContext ctx, HPy h_obj, HPy_buffer *view, int flags)
 {
     PyArrayObject *self;
     _buffer_info_t *info = NULL;
 
+    PyObject *obj = HPy_AsPyObject(ctx, h_obj);
     self = (PyArrayObject*)obj;
 
     /* Check whether we can provide the wanted properties */
     if ((flags & PyBUF_C_CONTIGUOUS) == PyBUF_C_CONTIGUOUS &&
             !PyArray_CHKFLAGS(self, NPY_ARRAY_C_CONTIGUOUS)) {
-        PyErr_SetString(PyExc_ValueError, "ndarray is not C-contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not C-contiguous");
         goto fail;
     }
     if ((flags & PyBUF_F_CONTIGUOUS) == PyBUF_F_CONTIGUOUS &&
             !PyArray_CHKFLAGS(self, NPY_ARRAY_F_CONTIGUOUS)) {
-        PyErr_SetString(PyExc_ValueError, "ndarray is not Fortran contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not Fortran contiguous");
         goto fail;
     }
     if ((flags & PyBUF_ANY_CONTIGUOUS) == PyBUF_ANY_CONTIGUOUS
             && !PyArray_ISONESEGMENT(self)) {
-        PyErr_SetString(PyExc_ValueError, "ndarray is not contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not contiguous");
         goto fail;
     }
     if ((flags & PyBUF_STRIDES) != PyBUF_STRIDES &&
             !PyArray_CHKFLAGS(self, NPY_ARRAY_C_CONTIGUOUS)) {
         /* Non-strided N-dim buffers must be C-contiguous */
-        PyErr_SetString(PyExc_ValueError, "ndarray is not C-contiguous");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "ndarray is not C-contiguous");
         goto fail;
     }
     if ((flags & PyBUF_WRITEABLE) == PyBUF_WRITEABLE) {
@@ -784,7 +787,7 @@ array_getbuffer(PyObject *obj, Py_buffer *view, int flags)
     }
 
     if (view == NULL) {
-        PyErr_SetString(PyExc_ValueError, "NULL view in getbuffer");
+        HPyErr_SetString(ctx, ctx->h_ValueError, "NULL view in getbuffer");
         goto fail;
     }
 
@@ -830,12 +833,13 @@ array_getbuffer(PyObject *obj, Py_buffer *view, int flags)
     else {
         view->strides = NULL;
     }
-    view->obj = (PyObject*)self;
+    view->obj = HPy_Dup(ctx, h_obj);
+    Py_DECREF(obj);
 
-    Py_INCREF(self);
     return 0;
 
 fail:
+    Py_DECREF(obj);
     return -1;
 }
 
@@ -884,13 +888,6 @@ void_getbuffer(PyObject *self, Py_buffer *view, int flags)
     return 0;
 }
 
-
-/*************************************************************************/
-
-NPY_NO_EXPORT PyBufferProcs array_as_buffer = {
-    (getbufferproc)array_getbuffer,
-    (releasebufferproc)0,
-};
 
 
 /*************************************************************************

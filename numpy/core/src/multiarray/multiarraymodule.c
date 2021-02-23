@@ -4598,7 +4598,6 @@ static HPy init__multiarray_umath_impl(HPyContext ctx) {
         goto err;
     }
     _PyArray_Type_p = (PyTypeObject*)HPy_AsPyObject(ctx, h_array_type);
-    PyArray_Type.tp_as_buffer = &array_as_buffer;
     PyArray_Type.tp_weaklistoffset = offsetof(PyArrayObject_fields, weakreflist);
     HPy_Close(ctx, h_array_type);
 
