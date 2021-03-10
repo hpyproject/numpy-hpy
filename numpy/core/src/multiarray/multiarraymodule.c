@@ -4526,7 +4526,7 @@ static struct PyModuleDef moduledef = {
 
 /* Initialization function for the module */
 HPy_MODINIT(_multiarray_umath)
-static HPy init__multiarray_umath_impl(HPyContext ctx) {
+static HPy init__multiarray_umath_impl(HPyContext *ctx) {
     PyObject *m, *d, *s;
     PyObject *c_api;
 
